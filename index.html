@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <!-- منع التكبير والتصغير والتمرير على الهواتف -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>لعبة الطاولة الاحترافية - أونلاين</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- شاشة الإجبار على الوضع العمودي (تظهر فقط في الوضع الأفقي) -->
+    <div id="portrait-lock">
+        <div style="font-size: 50px;">📱🔄</div>
+        <h2>يرجى تدوير الهاتف</h2>
+        <p>الرجاء استخدام الهاتف في الوضع العمودي (Portrait) للعب.</p>
+    </div>
+
+    <div id="start-screen" class="overlay">
+        <!-- القائمة الرئيسية -->
+        <div class="card" id="main-menu">
+            <h1>لعبة الطاولة</h1>
+            <button id="btn-vs-computer" class="menu-btn">اللعب مع الكمبيوتر</button>
+            <button id="btn-multiplayer" class="menu-btn">اللعب مع صديق (أونلاين)</button>
+        </div>
+
+        <!-- قائمة اللعب أونلاين -->
+        <div class="card" id="multiplayer-menu" style="display: none;">
+            <h1>اللعب أونلاين</h1>
+            <button id="btn-create-room" class="menu-btn" style="background-color: #2ecc71;">إنشاء غرفة جديدة</button>
+            
+            <div style="margin: 20px 0; border-top: 1px solid #ddd; padding-top: 20px;">
+                <p style="margin-bottom: 10px; font-weight: bold;">أو الانضمام لغرفة موجودة:</p>
+                <input type="text" id="room-code-input" placeholder="أدخل كود الغرفة هنا" class="input-field">
+                <button id="btn-join-room" class="menu-btn">انضمام للغرفة</button>
+            </div>
+            
+            <button id="btn-back-main" class="menu-btn" style="background-color: #e74c3c; margin-top: 10px;">رجوع</button>
+        </div>
+
+        <!-- شاشة إنشاء الغرفة -->
+        <div class="card" id="room-created-screen" style="display: none;">
+            <h2>تم إنشاء الغرفة!</h2>
+            <p>شارك هذا الكود مع صديقك:</p>
+            <h1 id="generated-room-code" style="letter-spacing: 4px; color: #2c3e50; margin: 15px 0;">----</h1>
+            <button id="btn-copy-code" class="menu-btn" style="background-color: #f39c12; margin-bottom: 15px;">نسخ الكود</button>
+            <p style="color: #7f8c8d; font-size: 14px;">(بمجرد انضمام صديقك، ستبدأ اللعبة تلقائياً)</p>
+            <button id="btn-back-multi" class="menu-btn" style="background-color: #e74c3c; margin-top: 15px;">إلغاء ورجوع</button>
+        </div>
+    </div>
+
+    <main id="game-container" style="display: none;">
+        <div id="timer" class="card">الغرفة: <span id="display-room"></span> | دور: <span id="turn-display">الأبيض</span></div>
+        
+        <div id="board-container" class="backgammon-board">
+            <!-- الصف العلوي -->
+            <div class="row">
+                <div class="points" id="p13"></div><div class="points" id="p14"></div><div class="points" id="p15"></div>
+                <div class="points" id="p16"></div><div class="points" id="p17"></div><div class="points" id="p18"></div>
+                <div class="bar"></div>
+                <div class="points" id="p19"></div><div class="points" id="p20"></div><div class="points" id="p21"></div>
+                <div class="points" id="p22"></div><div class="points" id="p23"></div><div class="points" id="p24"></div>
+            </div>
+
+            <!-- الصف السفلي -->
+            <div class="row">
+                <div class="points" id="p12"></div><div class="points" id="p11"></div><div class="points" id="p10"></div>
+                <div class="points" id="p9"></div><div class="points" id="p8"></div><div class="points" id="p7"></div>
+                <div class="bar"></div>
+                <div class="points" id="p6"></div><div class="points" id="p5"></div><div class="points" id="p4"></div>
+                <div class="points" id="p3"></div><div class="points" id="p2"></div><div class="points" id="p1"></div>
+            </div>
+        </div>
+
+        <div id="controls">
+            <button id="roll-dice">رمي النرد</button>
+            <div id="dice-result">النرد: -</div>
+        </div>
+    </main>
+
+    <!-- المكتبات الخارجية -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

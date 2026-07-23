@@ -68,8 +68,11 @@ document.getElementById('btn-copy-code').addEventListener('click', () => {
 });
 
 // الانضمام لغرفة
+// الانضمام لغرفة
 document.getElementById('btn-join-room').addEventListener('click', () => {
-    const code = document.getElementById('room-code-input').value.trim().toUpperCase();
+    const codeInput = document.getElementById('room-code-input');
+    const code = codeInput.value.trim().toUpperCase(); // تحويل الحروف تلقائياً إلى كبيرة لضمان التطابق
+    
     if(code) {
         currentRoom = code;
         socket.emit('joinRoom', code);

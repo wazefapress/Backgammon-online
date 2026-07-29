@@ -31,3 +31,5 @@
   * Express.js[cite: 2]
   * **Socket.io** لإدارة الغرف وتزامن الحركات والنرد بين اللاعبين[cite: 2]
 
+## رابط اللعبة 🎮 
+https://wazefapress.github.io/Backgammon-online/

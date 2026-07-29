@@ -2,19 +2,173 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <!-- منع التكبير والتصغير والتمرير على الهواتف -->
+    <!-- منع التكبير والتصغير والتمرير على الهواتف بشكل صارم -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>لعبة الطاولة الاحترافية - أونلاين</title>
-    <link rel="stylesheet" href="style.css">
+    
+    <style>
+        /* إعدادات الشاشة الأساسية لمنع التمرير والاهتزاز */
+        body { 
+            margin: 0; 
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            background: #2c3e50; 
+            font-family: sans-serif;
+            overflow: hidden; 
+            position: fixed; 
+            touch-action: none; 
+        }
+
+        /* حاوية اللعبة لترتيب العناصر عمودياً */
+        #game-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-evenly;
+            align-items: center;
+            box-sizing: border-box;
+            padding: 10px 0;
+        }
+
+        /* لوحة اللعب المتجاوبة مع الشاشات العمودية */
+        .backgammon-board {
+            display: flex;
+            flex-direction: column;
+            width: 95vw;
+            max-width: 450px;
+            height: 55vh; 
+            max-height: 600px;
+            background: #5d4037;
+            border: 1.5vw solid #3e2723;
+            padding: 1vw;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        .row { display: flex; flex: 1; gap: 2px; }
+
+        .points {
+            flex: 1;
+            background: #ddd;
+            clip-path: polygon(50% 100%, 0 0, 100% 0);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 5px;
+            transition: background 0.3s;
+        }
+
+        .row:nth-child(2) .points {
+            clip-path: polygon(50% 0, 0 100%, 100% 100%);
+            justify-content: flex-end;
+            padding-top: 0;
+            padding-bottom: 5px;
+        }
+
+        .bar { width: 5vmin; background: #3e2723; }
+
+        .checker {
+            width: 90%;
+            aspect-ratio: 1/1;
+            border-radius: 50%;
+            margin-bottom: -15%; 
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+            z-index: 1;
+        }
+
+        /* خاصية تكبير وعرض الحجر بالكامل عند الضغط أو السحب فوقه */
+        .checker.zoom-preview {
+            transform: scale(1.8);
+            z-index: 100;
+            transition: transform 0.2s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.6);
+        }
+
+        .white { background: #fff; }
+        .black { background: #000; }
+        .selected { border: 3px solid #f1c40f !important; box-shadow: inset 0 0 10px #f1c40f; }
+        .legal-move { background-color: rgba(46, 204, 113, 0.5) !important; cursor: pointer; }
+
+        /* القوائم والشاشات المنبثقة */
+        .overlay { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.8); display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 10; 
+        }
+        
+        .card { background: white; padding: 20px; border-radius: 10px; text-align: center; width: 85%; max-width: 400px; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+
+        .menu-btn {
+            display: block; width: 100%; padding: 12px; margin: 8px 0;
+            background-color: #3498db; color: white; border: none;
+            border-radius: 5px; font-size: 16px; font-weight: bold;
+            cursor: pointer; transition: 0.3s;
+        }
+        .menu-btn:hover { opacity: 0.9; }
+        .input-field {
+            width: 85%; padding: 12px; margin-bottom: 10px;
+            border: 2px solid #ccc; border-radius: 5px; text-align: center;
+            font-size: 18px; text-transform: uppercase;
+        }
+
+        #controls { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        #roll-dice { padding: 15px 30px; font-size: 18px; font-weight: bold; background: #e74c3c; color: white; border: none; border-radius: 8px; cursor: pointer; }
+        #roll-dice:disabled { background: #7f8c8d; cursor: not-allowed; }
+        #dice-result { color: white; font-size: 20px; font-weight: bold; }
+
+        /* شاشة الإجبار على الوضع العمودي */
+        #portrait-lock {
+            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #2c3e50; color: white; z-index: 9999; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center; padding: 20px; box-sizing: border-box;
+        }
+
+        @media screen and (min-aspect-ratio: 13/9) {
+            #portrait-lock { display: flex !important; }
+            #start-screen, #game-container { display: none !important; }
+        }
+
+        /* صندوق المحادثة */
+        #chat-box-container {
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+            width: 90%; max-width: 350px; background: rgba(255, 255, 255, 0.95);
+            border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 1000;
+            display: flex; flex-direction: column; overflow: hidden; transition: height 0.3s ease;
+        }
+        #chat-header {
+            background: #3498db; color: white; padding: 8px 12px; cursor: grab;
+            display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: bold;
+        }
+        #chat-body { padding: 10px; height: 100px; overflow-y: auto; font-size: 13px; display: flex; flex-direction: column; gap: 5px; }
+        #chat-footer { display: flex; border-top: 1px solid #ddd; }
+        #chat-input { flex: 1; padding: 8px; border: none; outline: none; font-size: 13px; }
+        #chat-send { background: #2ecc71; color: white; border: none; padding: 0 15px; cursor: pointer; }
+        
+        #chat-box-container.minimized { height: 35px !important; }
+        #chat-box-container.minimized #chat-body,
+        #chat-box-container.minimized #chat-footer { display: none; }
+
+        /* حقوق التطوير */
+        .copyright { margin-top: 20px; font-size: 13px; color: #ecf0f1; text-align: center; line-height: 1.6; }
+        .copyright a { color: #f39c12; text-decoration: none; font-weight: bold; }
+    </style>
 </head>
 <body>
-    <!-- شاشة الإجبار على الوضع العمودي (تظهر فقط في الوضع الأفقي) -->
+
+    <!-- شاشة الإجبار على الوضع العمودي -->
     <div id="portrait-lock">
         <div style="font-size: 50px;">📱🔄</div>
         <h2>يرجى تدوير الهاتف</h2>
         <p>الرجاء استخدام الهاتف في الوضع العمودي (Portrait) للعب.</p>
     </div>
 
+    <!-- الشاشات والقوائم -->
     <div id="start-screen" class="overlay">
         <!-- القائمة الرئيسية -->
         <div class="card" id="main-menu">
@@ -46,13 +200,19 @@
             <p style="color: #7f8c8d; font-size: 14px;">(بمجرد انضمام صديقك، ستبدأ اللعبة تلقائياً)</p>
             <button id="btn-back-multi" class="menu-btn" style="background-color: #e74c3c; margin-top: 15px;">إلغاء ورجوع</button>
         </div>
+
+        <!-- حقوق النشر والتطوير -->
+        <div class="copyright">
+            جميع الحقوق محفوظة &copy; 2026 - تطوير: <strong>هيثم زيدان</strong><br>
+            <a href="https://www.patreon.com/" target="_blank">ادعمني على Patreon</a>
+        </div>
     </div>
 
+    <!-- واجهة اللعبة -->
     <main id="game-container" style="display: none;">
-        <div id="timer" class="card">الغرفة: <span id="display-room"></span> | دور: <span id="turn-display">الأبيض</span></div>
+        <div id="timer" class="card" style="padding: 10px; width: auto;">الغرفة: <span id="display-room"></span> | دور: <span id="turn-display">الأبيض</span></div>
         
         <div id="board-container" class="backgammon-board">
-            <!-- الصف العلوي -->
             <div class="row">
                 <div class="points" id="p13"></div><div class="points" id="p14"></div><div class="points" id="p15"></div>
                 <div class="points" id="p16"></div><div class="points" id="p17"></div><div class="points" id="p18"></div>
@@ -60,8 +220,6 @@
                 <div class="points" id="p19"></div><div class="points" id="p20"></div><div class="points" id="p21"></div>
                 <div class="points" id="p22"></div><div class="points" id="p23"></div><div class="points" id="p24"></div>
             </div>
-
-            <!-- الصف السفلي -->
             <div class="row">
                 <div class="points" id="p12"></div><div class="points" id="p11"></div><div class="points" id="p10"></div>
                 <div class="points" id="p9"></div><div class="points" id="p8"></div><div class="points" id="p7"></div>
@@ -75,11 +233,351 @@
             <button id="roll-dice">رمي النرد</button>
             <div id="dice-result">النرد: -</div>
         </div>
+
+        <!-- صندوق المحادثة -->
+        <div id="chat-box-container" style="display: none;">
+            <div id="chat-header">
+                <span>المحادثة</span>
+                <div>
+                    <button id="chat-toggle-btn" style="background:none; border:none; color:white; cursor:pointer; font-weight:bold;">_</button>
+                </div>
+            </div>
+            <div id="chat-body"></div>
+            <div id="chat-footer">
+                <input type="text" id="chat-input" placeholder="اكتب رسالة...">
+                <button id="chat-send">إرسال</button>
+            </div>
+        </div>
     </main>
 
     <!-- المكتبات الخارجية -->
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
-    <script src="script.js"></script>
+    
+    <script>
+        // ---------------- إعدادات السيرفر ----------------
+        // استبدل الرابط برابط Render الخاص بك
+        const socket = io('https://backgammon-online.onrender.com'); 
+
+        let boardState = Array(24).fill(null).map(() => ({ color: null, count: 0 }));
+        let diceValues = [], selectedPoint = null;
+        let currentRoom = '', myColor = 'white', currentTurn = 'white', isVsComputer = false; 
+
+        const diceSound = new Howl({ src: ['https://actions.google.com/sounds/v1/objects/dice_roll.ogg'] });
+        const moveSound = new Howl({ src: ['https://actions.google.com/sounds/v1/objects/plastic_tap.ogg'] });
+
+        // ---------------- التفاعل المرئي مع الأحجار (Zoom) ----------------
+        document.addEventListener('touchstart', handleTouchPreview, {passive: true});
+        document.addEventListener('mouseover', (e) => {
+            if(e.target.classList.contains('checker')) e.target.classList.add('zoom-preview');
+        });
+        document.addEventListener('mouseout', (e) => {
+            if(e.target.classList.contains('checker')) e.target.classList.remove('zoom-preview');
+        });
+
+        function handleTouchPreview(e) {
+            if(e.target.classList.contains('checker')) {
+                document.querySelectorAll('.checker').forEach(c => c.classList.remove('zoom-preview'));
+                e.target.classList.add('zoom-preview');
+                setTimeout(() => e.target.classList.remove('zoom-preview'), 1500);
+            }
+        }
+
+        // ---------------- إدارة القوائم ----------------
+        const mainMenu = document.getElementById('main-menu');
+        const multiplayerMenu = document.getElementById('multiplayer-menu');
+        const roomCreatedScreen = document.getElementById('room-created-screen');
+        const startScreen = document.getElementById('start-screen');
+        const gameContainer = document.getElementById('game-container');
+
+        document.getElementById('btn-vs-computer').addEventListener('click', () => {
+            isVsComputer = true;
+            startScreen.style.display = 'none';
+            gameContainer.style.display = 'flex';
+            myColor = 'white'; 
+            document.getElementById('display-room').innerText = 'الكمبيوتر';
+            document.getElementById('chat-box-container').style.display = 'none'; // إخفاء الشات
+            initBoard();
+            updateTurnDisplay();
+        });
+
+        document.getElementById('btn-multiplayer').addEventListener('click', () => {
+            mainMenu.style.display = 'none';
+            multiplayerMenu.style.display = 'block';
+        });
+
+        document.getElementById('btn-back-main').addEventListener('click', () => {
+            multiplayerMenu.style.display = 'none';
+            mainMenu.style.display = 'block';
+        });
+
+        document.getElementById('btn-back-multi').addEventListener('click', () => {
+            roomCreatedScreen.style.display = 'none';
+            multiplayerMenu.style.display = 'block';
+        });
+
+        // ---------------- توليد والانضمام للغرف ----------------
+        document.getElementById('btn-create-room').addEventListener('click', () => {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let code = '';
+            for(let i=0; i<5; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+            
+            currentRoom = code;
+            document.getElementById('generated-room-code').innerText = code;
+            
+            multiplayerMenu.style.display = 'none';
+            roomCreatedScreen.style.display = 'block';
+            socket.emit('joinRoom', code);
+        });
+
+        document.getElementById('btn-copy-code').addEventListener('click', () => {
+            const code = document.getElementById('generated-room-code').innerText;
+            navigator.clipboard.writeText(code).then(() => alert('تم نسخ كود الغرفة بنجاح!'));
+        });
+
+        document.getElementById('btn-join-room').addEventListener('click', () => {
+            const codeInput = document.getElementById('room-code-input');
+            const code = codeInput.value.trim().toUpperCase(); // حل مشكلة الحروف الصغيرة
+            
+            if(code) {
+                currentRoom = code;
+                socket.emit('joinRoom', code);
+            } else {
+                alert('يرجى إدخال كود الغرفة أولاً!');
+            }
+        });
+
+        // ---------------- منطق اللعبة واللوحة ----------------
+        function initBoard() {
+            const setup = [
+                {index:0, color:'black', count:2}, {index:5, color:'white', count:5}, 
+                {index:11, color:'black', count:5}, {index:23, color:'white', count:2}
+            ];
+            boardState = Array(24).fill(null).map(() => ({ color: null, count: 0 }));
+            setup.forEach(p => boardState[p.index] = { color: p.color, count: p.count });
+            renderBoard();
+        }
+
+        function renderBoard() {
+            boardState.forEach((point, i) => {
+                const el = document.getElementById(`p${i + 1}`);
+                if(!el) return;
+                el.innerHTML = '';
+                for(let j=0; j<point.count; j++) {
+                    const ch = document.createElement('div');
+                    ch.className = `checker ${point.color}`;
+                    el.appendChild(ch);
+                }
+            });
+        }
+
+        function checkWinner() {
+            let w = boardState.reduce((acc, p) => p.color === 'white' ? acc + p.count : acc, 0);
+            let b = boardState.reduce((acc, p) => p.color === 'black' ? acc + p.count : acc, 0);
+            if(w === 0) { alert("فاز الأبيض!"); initBoard(); }
+            else if(b === 0) { alert("فاز الأسود!"); initBoard(); }
+        }
+
+        function highlightLegalMoves(fromIndex) {
+            document.querySelectorAll('.points').forEach(p => p.classList.remove('legal-move'));
+            diceValues.forEach(dice => {
+                let to = fromIndex + dice;
+                if(to < 24 && (boardState[to].count < 2 || boardState[to].color === boardState[fromIndex].color)) {
+                    document.getElementById(`p${to + 1}`)?.classList.add('legal-move');
+                }
+            });
+        }
+
+        function moveChecker(from, to, isRemote = false) {
+            if(boardState[from].count > 0 && (boardState[to].count < 2 || boardState[to].color === boardState[from].color)) {
+                moveSound.play();
+                boardState[to].color = boardState[from].color;
+                boardState[to].count += 1;
+                boardState[from].count--;
+                if(boardState[from].count === 0) boardState[from] = { color: null, count: 0 };
+                
+                renderBoard();
+                checkWinner();
+
+                if (isVsComputer) {
+                    if (!isRemote) { 
+                        currentTurn = 'black';
+                        updateTurnDisplay();
+                        setTimeout(playComputerTurn, 1500); 
+                    }
+                } else if (!isRemote) { 
+                    currentTurn = myColor === 'white' ? 'black' : 'white';
+                    updateTurnDisplay();
+                    socket.emit('move', { room: currentRoom, from, to, nextTurn: currentTurn });
+                }
+                return true;
+            }
+            return false;
+        }
+
+        function updateTurnDisplay() {
+            document.getElementById('turn-display').innerText = currentTurn === 'white' ? 'الأبيض' : 'الأسود';
+            document.getElementById('roll-dice').disabled = (currentTurn !== myColor);
+        }
+
+        // ---------------- ذكاء الكمبيوتر ----------------
+        function playComputerTurn() {
+            if(!isVsComputer || currentTurn !== 'black') return;
+            
+            diceSound.play();
+            diceValues = [Math.floor(Math.random()*6)+1, Math.floor(Math.random()*6)+1];
+            document.getElementById('dice-result').innerText = `النرد (الكمبيوتر): ${diceValues.join(' - ')}`;
+            
+            let moved = false;
+            for(let i=0; i<24; i++) {
+                if(boardState[i].count > 0 && boardState[i].color === 'black') {
+                    for(let dice of diceValues) {
+                        let to = i + dice;
+                        if(to < 24 && (boardState[to].count < 2 || boardState[to].color === 'black')) {
+                            moveChecker(i, to, true); 
+                            moved = true;
+                            break;
+                        }
+                    }
+                }
+                if(moved) break;
+            }
+            
+            currentTurn = 'white';
+            updateTurnDisplay();
+        }
+
+        // ---------------- أحداث النقر ----------------
+        for(let i=0; i<24; i++) {
+            document.getElementById(`p${i+1}`).addEventListener('click', () => {
+                if(currentTurn !== myColor) return;
+
+                if(selectedPoint === null) {
+                    if(boardState[i].count > 0 && boardState[i].color === myColor) {
+                        selectedPoint = i;
+                        document.getElementById(`p${i+1}`).classList.add('selected');
+                        highlightLegalMoves(i);
+                    }
+                } else {
+                    document.getElementById(`p${selectedPoint+1}`).classList.remove('selected');
+                    moveChecker(selectedPoint, i);
+                    selectedPoint = null;
+                    document.querySelectorAll('.points').forEach(p => p.classList.remove('legal-move'));
+                }
+            });
+        }
+
+        document.getElementById('roll-dice').addEventListener('click', () => {
+            if(currentTurn !== myColor) return;
+
+            diceSound.play();
+            diceValues = [Math.floor(Math.random()*6)+1, Math.floor(Math.random()*6)+1];
+            document.getElementById('dice-result').innerText = `النرد: ${diceValues.join(' - ')}`;
+            
+            if(!isVsComputer) {
+                socket.emit('diceRolled', { room: currentRoom, diceValues });
+            }
+        });
+
+        // ---------------- صندوق المحادثة ----------------
+        function enableChatFeatures() {
+            const chatContainer = document.getElementById('chat-box-container');
+            chatContainer.style.display = 'flex';
+
+            const toggleBtn = document.getElementById('chat-toggle-btn');
+            toggleBtn.addEventListener('click', () => {
+                chatContainer.classList.toggle('minimized');
+                toggleBtn.innerText = chatContainer.classList.contains('minimized') ? '□' : '_';
+            });
+
+            const header = document.getElementById('chat-header');
+            let isDragging = false, startX, startY;
+
+            header.addEventListener('mousedown', startDrag);
+            header.addEventListener('touchstart', startDrag, {passive: true});
+
+            function startDrag(e) {
+                isDragging = true;
+                startX = e.clientX || e.touches[0].clientX;
+                startY = e.clientY || e.touches[0].clientY;
+                document.addEventListener('mousemove', onDrag);
+                document.addEventListener('touchmove', onDrag, {passive: true});
+                document.addEventListener('mouseup', stopDrag);
+                document.addEventListener('touchend', stopDrag);
+            }
+
+            function onDrag(e) {
+                if(!isDragging) return;
+                let clientX = e.clientX || e.touches[0].clientX;
+                let clientY = e.clientY || e.touches[0].clientY;
+                let dx = clientX - startX;
+                let dy = clientY - startY;
+                startX = clientX;
+                startY = clientY;
+
+                let rect = chatContainer.getBoundingClientRect();
+                chatContainer.style.left = (rect.left + dx) + 'px';
+                chatContainer.style.top = (rect.top + dy) + 'px';
+                chatContainer.style.transform = 'none'; 
+            }
+
+            function stopDrag() {
+                isDragging = false;
+                document.removeEventListener('mousemove', onDrag);
+                document.removeEventListener('touchmove', onDrag);
+                document.removeEventListener('mouseup', stopDrag);
+                document.removeEventListener('touchend', stopDrag);
+            }
+
+            document.getElementById('chat-send').addEventListener('click', sendChatMessage);
+            document.getElementById('chat-input').addEventListener('keypress', (e) => {
+                if(e.key === 'Enter') sendChatMessage();
+            });
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById('chat-input');
+            const msg = input.value.trim();
+            if(msg && currentRoom) {
+                appendChatMessage('أنت: ' + msg, '#2980b9');
+                socket.emit('chatMessage', { room: currentRoom, message: msg });
+                input.value = '';
+            }
+        }
+
+        function appendChatMessage(text, color = '#333') {
+            const body = document.getElementById('chat-body');
+            const div = document.createElement('div');
+            div.style.color = color;
+            div.innerText = text;
+            body.appendChild(div);
+            body.scrollTop = body.scrollHeight;
+        }
+
+        // ---------------- أحداث Socket.io للأونلاين ----------------
+        socket.on('roomJoined', (data) => {
+            myColor = data.color; 
+            startScreen.style.display = 'none';
+            gameContainer.style.display = 'flex';
+            document.getElementById('display-room').innerText = currentRoom;
+            isVsComputer = false; 
+            
+            initBoard();
+            updateTurnDisplay();
+            enableChatFeatures(); // تفعيل المحادثة
+
+            if(myColor === 'white') {
+                alert(`تم بدء الغرفة! الكود هو: ${currentRoom}. أنت الأبيض، يمكنك اللعب فور انضمام الخصم.`);
+            } else {
+                alert(`تم الانضمام للغرفة! أنت الأسود. الأبيض يبدأ اللعب.`);
+            }
+        });
+
+        socket.on('roomFull', () => alert("عذراً، الغرفة ممتلئة!"));
+        socket.on('receiveMove', (data) => { moveChecker(data.from, data.to, true); currentTurn = data.nextTurn; updateTurnDisplay(); });
+        socket.on('receiveDice', (data) => { diceSound.play(); diceValues = data.diceValues; document.getElementById('dice-result').innerText = `النرد: ${diceValues.join(' - ')}`; });
+        socket.on('receiveChatMessage', (data) => appendChatMessage('الخصم: ' + data.message, '#c0392b'));
+        socket.on('opponentLeft', () => { alert("غادر الخصم اللعبة!"); window.location.reload(); });
+    </script>
 </body>
 </html>

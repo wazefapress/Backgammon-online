@@ -5,7 +5,7 @@ const { Server } = require('socket.io');
 const app = express();
 const server = http.createServer(app);
 
-// إعداد CORS للسماح بالاتصال من أي نطاق (Frontend)
+// إعداد CORS للسماح بالاتصال من أي نطاق (الواجهة الأمامية)
 const io = new Server(server, {
     cors: {
         origin: "*", 
@@ -57,6 +57,11 @@ io.on('connection', (socket) => {
         socket.to(data.room).emit('receiveDice', data);
     });
 
+    // استقبال رسالة المحادثة وإرسالها للخصم
+    socket.on('chatMessage', (data) => {
+        socket.to(data.room).emit('receiveChatMessage', data);
+    });
+
     // معالجة قطع الاتصال (خروج لاعب)
     socket.on('disconnect', () => {
         console.log('مستخدم غادر:', socket.id);
@@ -68,8 +73,10 @@ io.on('connection', (socket) => {
             if (playerIndex !== -1) {
                 room.players.splice(playerIndex, 1);
                 
+                // إبلاغ الخصم بانسحاب اللاعب
                 socket.to(roomCode).emit('opponentLeft');
                 
+                // تدمير الغرفة تماماً إذا أصبحت فارغة
                 if (room.players.length === 0) {
                     delete rooms[roomCode];
                 }
@@ -79,7 +86,7 @@ io.on('connection', (socket) => {
     });
 });
 
-const PORT = process.env.PORT || 10000;
+const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
     console.log(`سيرفر لعبة الطاولة يعمل بنجاح على البورت ${PORT}`);
 });

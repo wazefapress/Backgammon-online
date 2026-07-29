@@ -12,7 +12,7 @@
             margin: 0; 
             padding: 0;
             width: 100vw;
-            height: 100vh;
+            height: 100dvh; 
             display: flex; 
             justify-content: center; 
             align-items: center; 
@@ -32,7 +32,7 @@
             justify-content: space-evenly;
             align-items: center;
             box-sizing: border-box;
-            padding: 10px 0;
+            padding: 2dvh 0;
         }
 
         /* لوحة اللعب المتجاوبة مع الشاشات العمودية */
@@ -41,7 +41,7 @@
             flex-direction: column;
             width: 95vw;
             max-width: 450px;
-            height: 55vh; 
+            height: 55dvh; 
             max-height: 600px;
             background: #5d4037;
             border: 1.5vw solid #3e2723;
@@ -82,7 +82,6 @@
             z-index: 1;
         }
 
-        /* خاصية تكبير وعرض الحجر بالكامل عند الضغط أو السحب فوقه */
         .checker.zoom-preview {
             transform: scale(1.8);
             z-index: 100;
@@ -120,11 +119,44 @@
         #controls { display: flex; flex-direction: column; align-items: center; gap: 10px; }
         #roll-dice { padding: 15px 30px; font-size: 18px; font-weight: bold; background: #e74c3c; color: white; border: none; border-radius: 8px; cursor: pointer; }
         #roll-dice:disabled { background: #7f8c8d; cursor: not-allowed; }
-        #dice-result { color: white; font-size: 20px; font-weight: bold; }
+        
+        /* إعدادات النرد الحقيقي التفاعلي */
+        #dice-result-container { display: flex; gap: 15px; min-height: 55px; align-items: center; justify-content: center; }
+        .dice {
+            width: 50px; height: 50px;
+            background-color: white;
+            border-radius: 10px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr 1fr;
+            grid-template-areas:
+                "a . c"
+                "e g f"
+                "d . b";
+            padding: 6px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3), inset 0 0 10px rgba(0,0,0,0.1);
+            box-sizing: border-box;
+            background: linear-gradient(145deg, #ffffff, #e6e6e6);
+        }
+        .dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            background-color: #c0392b;
+            justify-self: center; align-self: center;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+        }
+        .rolling {
+            animation: roll-animation 0.5s ease-out;
+        }
+        @keyframes roll-animation {
+            0% { transform: rotateX(0deg) rotateY(0deg) scale(0.8); }
+            50% { transform: rotateX(180deg) rotateY(180deg) scale(1.2); }
+            100% { transform: rotateX(360deg) rotateY(360deg) scale(1); }
+        }
 
         /* شاشة الإجبار على الوضع العمودي */
         #portrait-lock {
-            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
             background: #2c3e50; color: white; z-index: 9999; flex-direction: column;
             justify-content: center; align-items: center; text-align: center; padding: 20px; box-sizing: border-box;
         }
@@ -153,6 +185,17 @@
         #chat-box-container.minimized { height: 35px !important; }
         #chat-box-container.minimized #chat-body,
         #chat-box-container.minimized #chat-footer { display: none; }
+
+        /* شاشة نهاية اللعبة الفوز/الخسارة */
+        #game-over-screen {
+            display: none; 
+            z-index: 10000;
+        }
+        .result-title {
+            font-size: 28px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
 
         /* حقوق التطوير */
         .copyright { margin-top: 20px; font-size: 13px; color: #ecf0f1; text-align: center; line-height: 1.6; }
@@ -208,9 +251,23 @@
         </div>
     </div>
 
+    <!-- شاشة الفوز والخسارة -->
+    <div id="game-over-screen" class="overlay">
+        <div class="card">
+            <h1 id="game-result-title" class="result-title"></h1>
+            <p id="game-result-desc" style="color: #7f8c8d; margin-bottom: 20px;"></p>
+            <button id="btn-restart-game" class="menu-btn" style="background-color: #3498db;">العودة للقائمة الرئيسية</button>
+        </div>
+    </div>
+
     <!-- واجهة اللعبة -->
     <main id="game-container" style="display: none;">
-        <div id="timer" class="card" style="padding: 10px; width: auto;">الغرفة: <span id="display-room"></span> | دور: <span id="turn-display">الأبيض</span></div>
+        <div id="timer" class="card" style="padding: 10px; width: auto; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <span style="font-size:14px; font-weight:bold;">الغرفة: <span id="display-room" style="color: #2980b9; letter-spacing: 1px;"></span></span>
+            <button onclick="copyRoomCodeInGame()" style="background:#f39c12; border:none; border-radius:4px; padding:3px 8px; cursor:pointer; color:white; font-size:12px; font-weight:bold;">نسخ 📋</button>
+            <span style="margin: 0 5px;">|</span>
+            <span style="font-size:14px; font-weight:bold;">دور: <span id="turn-display">الأبيض</span></span>
+        </div>
         
         <div id="board-container" class="backgammon-board">
             <div class="row">
@@ -231,7 +288,7 @@
 
         <div id="controls">
             <button id="roll-dice">رمي النرد</button>
-            <div id="dice-result">النرد: -</div>
+            <div id="dice-result-container"></div>
         </div>
 
         <!-- صندوق المحادثة -->
@@ -256,15 +313,18 @@
     
     <script>
         // ---------------- إعدادات السيرفر ----------------
-        // استبدل الرابط برابط Render الخاص بك
         const socket = io('https://backgammon-online.onrender.com'); 
 
         let boardState = Array(24).fill(null).map(() => ({ color: null, count: 0 }));
         let diceValues = [], selectedPoint = null;
         let currentRoom = '', myColor = 'white', currentTurn = 'white', isVsComputer = false; 
 
+        // ---------------- إعدادات الأصوات (Sound Effects) ----------------
+        // تم استخدام روابط صوتية موثوقة ومجانية
         const diceSound = new Howl({ src: ['https://actions.google.com/sounds/v1/objects/dice_roll.ogg'] });
         const moveSound = new Howl({ src: ['https://actions.google.com/sounds/v1/objects/plastic_tap.ogg'] });
+        const winSound = new Howl({ src: ['https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3'] }); // صوت نجاح
+        const loseSound = new Howl({ src: ['https://assets.mixkit.co/active_storage/sfx/3124/3124-preview.mp3'] }); // صوت خسارة
 
         // ---------------- التفاعل المرئي مع الأحجار (Zoom) ----------------
         document.addEventListener('touchstart', handleTouchPreview, {passive: true});
@@ -289,6 +349,7 @@
         const roomCreatedScreen = document.getElementById('room-created-screen');
         const startScreen = document.getElementById('start-screen');
         const gameContainer = document.getElementById('game-container');
+        const gameOverScreen = document.getElementById('game-over-screen');
 
         document.getElementById('btn-vs-computer').addEventListener('click', () => {
             isVsComputer = true;
@@ -296,7 +357,7 @@
             gameContainer.style.display = 'flex';
             myColor = 'white'; 
             document.getElementById('display-room').innerText = 'الكمبيوتر';
-            document.getElementById('chat-box-container').style.display = 'none'; // إخفاء الشات
+            document.getElementById('chat-box-container').style.display = 'none';
             initBoard();
             updateTurnDisplay();
         });
@@ -316,7 +377,13 @@
             multiplayerMenu.style.display = 'block';
         });
 
-        // ---------------- توليد والانضمام للغرف ----------------
+        // العودة من شاشة النهاية
+        document.getElementById('btn-restart-game').addEventListener('click', () => {
+            // إعادة تحميل الصفحة لضمان تصفير الاتصال وتنظيف اللعبة
+            window.location.reload(); 
+        });
+
+        // ---------------- توليد والانضمام ونسخ الغرف ----------------
         document.getElementById('btn-create-room').addEventListener('click', () => {
             const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
             let code = '';
@@ -334,10 +401,20 @@
             const code = document.getElementById('generated-room-code').innerText;
             navigator.clipboard.writeText(code).then(() => alert('تم نسخ كود الغرفة بنجاح!'));
         });
+        
+        window.copyRoomCodeInGame = function() {
+            if(currentRoom && currentRoom !== 'الكمبيوتر') {
+                navigator.clipboard.writeText(currentRoom).then(() => {
+                    alert('تم نسخ كود الغرفة: ' + currentRoom);
+                });
+            } else {
+                alert('أنت تلعب ضد الكمبيوتر!');
+            }
+        };
 
         document.getElementById('btn-join-room').addEventListener('click', () => {
             const codeInput = document.getElementById('room-code-input');
-            const code = codeInput.value.trim().toUpperCase(); // حل مشكلة الحروف الصغيرة
+            const code = codeInput.value.trim().toUpperCase(); 
             
             if(code) {
                 currentRoom = code;
@@ -347,12 +424,48 @@
             }
         });
 
+        // ---------------- النرد الحقيقي (الأنيميشن) ----------------
+        function renderDice(values) {
+            const container = document.getElementById('dice-result-container');
+            container.innerHTML = ''; 
+            
+            const dotsMap = {
+                1: ['g'],
+                2: ['a', 'b'],
+                3: ['a', 'g', 'b'],
+                4: ['a', 'c', 'd', 'b'],
+                5: ['a', 'c', 'g', 'd', 'b'],
+                6: ['a', 'c', 'e', 'f', 'd', 'b']
+            };
+
+            values.forEach(val => {
+                const dice = document.createElement('div');
+                dice.className = 'dice rolling';
+                
+                dotsMap[val].forEach(area => {
+                    const dot = document.createElement('div');
+                    dot.className = 'dot';
+                    dot.style.gridArea = area;
+                    dice.appendChild(dot);
+                });
+                
+                container.appendChild(dice);
+                
+                setTimeout(() => dice.classList.remove('rolling'), 500);
+            });
+        }
+
         // ---------------- منطق اللعبة واللوحة ----------------
         function initBoard() {
+            // توزيعة الأحجار لبداية اللعبة
             const setup = [
                 {index:0, color:'black', count:2}, {index:5, color:'white', count:5}, 
                 {index:11, color:'black', count:5}, {index:23, color:'white', count:2}
             ];
+            
+            // لإختبار شاشة الفوز سريعا يمكنك تفعيل هذا الكود مؤقتاً:
+            // const setup = [{index:0, color:'white', count:1}, {index:23, color:'black', count:1}]; 
+
             boardState = Array(24).fill(null).map(() => ({ color: null, count: 0 }));
             setup.forEach(p => boardState[p.index] = { color: p.color, count: p.count });
             renderBoard();
@@ -371,11 +484,36 @@
             });
         }
 
+        // ---------------- شاشة إعلان النتيجة والتأكد من الفوز ----------------
+        function showGameResult(winningColor) {
+            const title = document.getElementById('game-result-title');
+            const desc = document.getElementById('game-result-desc');
+            
+            gameOverScreen.style.display = 'flex';
+
+            if (winningColor === myColor) {
+                title.innerText = "🎉 مبروك! لقد فزت 🎉";
+                title.style.color = "#2ecc71";
+                desc.innerText = "أداء رائع، لقد تمكنت من إخراج جميع أحجارك أولاً.";
+                winSound.play(); // تشغيل صوت الفوز
+            } else {
+                title.innerText = "😔 حظاً أوفر! لقد خسرت 😔";
+                title.style.color = "#e74c3c";
+                desc.innerText = "لا تستسلم، يمكنك المحاولة مرة أخرى والفوز!";
+                loseSound.play(); // تشغيل صوت الخسارة
+            }
+        }
+
         function checkWinner() {
             let w = boardState.reduce((acc, p) => p.color === 'white' ? acc + p.count : acc, 0);
             let b = boardState.reduce((acc, p) => p.color === 'black' ? acc + p.count : acc, 0);
-            if(w === 0) { alert("فاز الأبيض!"); initBoard(); }
-            else if(b === 0) { alert("فاز الأسود!"); initBoard(); }
+            
+            if(w === 0) { 
+                setTimeout(() => showGameResult('white'), 500);
+            }
+            else if(b === 0) { 
+                setTimeout(() => showGameResult('black'), 500);
+            }
         }
 
         function highlightLegalMoves(fromIndex) {
@@ -390,7 +528,10 @@
 
         function moveChecker(from, to, isRemote = false) {
             if(boardState[from].count > 0 && (boardState[to].count < 2 || boardState[to].color === boardState[from].color)) {
+                
+                // تشغيل صوت تحريك القطعة
                 moveSound.play();
+
                 boardState[to].color = boardState[from].color;
                 boardState[to].count += 1;
                 boardState[from].count--;
@@ -424,9 +565,9 @@
         function playComputerTurn() {
             if(!isVsComputer || currentTurn !== 'black') return;
             
-            diceSound.play();
+            diceSound.play(); // تشغيل صوت النرد للكمبيوتر
             diceValues = [Math.floor(Math.random()*6)+1, Math.floor(Math.random()*6)+1];
-            document.getElementById('dice-result').innerText = `النرد (الكمبيوتر): ${diceValues.join(' - ')}`;
+            renderDice(diceValues); 
             
             let moved = false;
             for(let i=0; i<24; i++) {
@@ -434,7 +575,8 @@
                     for(let dice of diceValues) {
                         let to = i + dice;
                         if(to < 24 && (boardState[to].count < 2 || boardState[to].color === 'black')) {
-                            moveChecker(i, to, true); 
+                            // تم وضع مؤقت بسيط ليظهر وكأن الكمبيوتر يفكر قبل الحركة
+                            setTimeout(() => { moveChecker(i, to, true); }, 800);
                             moved = true;
                             break;
                         }
@@ -470,9 +612,11 @@
         document.getElementById('roll-dice').addEventListener('click', () => {
             if(currentTurn !== myColor) return;
 
+            // تشغيل صوت النرد
             diceSound.play();
+            
             diceValues = [Math.floor(Math.random()*6)+1, Math.floor(Math.random()*6)+1];
-            document.getElementById('dice-result').innerText = `النرد: ${diceValues.join(' - ')}`;
+            renderDice(diceValues); 
             
             if(!isVsComputer) {
                 socket.emit('diceRolled', { room: currentRoom, diceValues });
@@ -564,7 +708,7 @@
             
             initBoard();
             updateTurnDisplay();
-            enableChatFeatures(); // تفعيل المحادثة
+            enableChatFeatures(); 
 
             if(myColor === 'white') {
                 alert(`تم بدء الغرفة! الكود هو: ${currentRoom}. أنت الأبيض، يمكنك اللعب فور انضمام الخصم.`);
@@ -575,7 +719,11 @@
 
         socket.on('roomFull', () => alert("عذراً، الغرفة ممتلئة!"));
         socket.on('receiveMove', (data) => { moveChecker(data.from, data.to, true); currentTurn = data.nextTurn; updateTurnDisplay(); });
-        socket.on('receiveDice', (data) => { diceSound.play(); diceValues = data.diceValues; document.getElementById('dice-result').innerText = `النرد: ${diceValues.join(' - ')}`; });
+        socket.on('receiveDice', (data) => { 
+            diceSound.play(); // تشغيل الصوت عندما يرمي الخصم النرد
+            diceValues = data.diceValues; 
+            renderDice(diceValues); 
+        });
         socket.on('receiveChatMessage', (data) => appendChatMessage('الخصم: ' + data.message, '#c0392b'));
         socket.on('opponentLeft', () => { alert("غادر الخصم اللعبة!"); window.location.reload(); });
     </script>

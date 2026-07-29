@@ -321,10 +321,10 @@
 
         // ---------------- إعدادات الأصوات (Sound Effects) ----------------
         // تم استخدام روابط صوتية موثوقة ومجانية
-        const diceSound = new Howl({ src: ['https://actions.google.com/sounds/v1/objects/dice_roll.ogg'] });
+        const diceSound = new Howl({ src: ['dice_roll.mp3'] });
         const moveSound = new Howl({ src: ['https://actions.google.com/sounds/v1/objects/plastic_tap.ogg'] });
-        const winSound = new Howl({ src: ['https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3'] }); // صوت نجاح
-        const loseSound = new Howl({ src: ['https://assets.mixkit.co/active_storage/sfx/3124/3124-preview.mp3'] }); // صوت خسارة
+        const winSound = new Howl({ src: ['win.wav'] }); // صوت نجاح
+        const loseSound = new Howl({ src: ['lose.mp3'] }); // صوت خسارة
 
         // ---------------- التفاعل المرئي مع الأحجار (Zoom) ----------------
         document.addEventListener('touchstart', handleTouchPreview, {passive: true});

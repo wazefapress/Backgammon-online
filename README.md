@@ -33,3 +33,6 @@
 
 ## رابط اللعبة 🎮 
 https://wazefapress.github.io/Backgammon-online/
+
+المزيد من الألعاب 
+https://games.haythamzeidan.workers.dev/
